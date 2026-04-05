@@ -106,8 +106,64 @@ button {
     }
   }
 
-  &__cart {
+  &__actions {
+    display: inline-flex;
+    align-items: center;
     justify-self: start;
+    gap: 0.55rem;
+    min-width: 0;
+  }
+
+  &__auth {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  &__auth-note {
+    color: $text-muted;
+    font-size: 0.84rem;
+  }
+
+  &__auth-email {
+    max-width: 190px;
+    border: 1px solid rgba(215, 207, 191, 0.9);
+    border-radius: 999px;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.82rem;
+    color: $text-main;
+    background: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__auth-btn {
+    border: 1px solid $border;
+    border-radius: 999px;
+    padding: 0.42rem 0.72rem;
+    background: #fff;
+    color: $text-main;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: 160ms ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      border-color: rgba(15, 143, 154, 0.42);
+    }
+
+    &--primary {
+      color: #fff;
+      border-color: transparent;
+      background: linear-gradient(145deg, $accent, $accent-dark);
+      box-shadow: 0 8px 16px rgba(15, 143, 154, 0.22);
+    }
+  }
+
+  &__cart {
+    justify-self: auto;
     border: 0;
     color: #fff;
     background: linear-gradient(140deg, $accent-warm, #ff6d3b);
@@ -909,6 +965,110 @@ button {
   }
 }
 
+.auth-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: rgba(10, 21, 31, 0.38);
+}
+
+.auth-modal {
+  position: fixed;
+  z-index: 96;
+  top: 50%;
+  left: 50%;
+  width: min(430px, calc(100vw - 1.2rem));
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(215, 207, 191, 0.9);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 18px 36px rgba(20, 32, 44, 0.2);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    padding: 0.8rem 0.9rem;
+    border-bottom: 1px solid rgba(215, 207, 191, 0.8);
+
+    h2 {
+      margin: 0;
+      font-family: $font-heading;
+      font-size: 1.08rem;
+    }
+
+    button {
+      border: 1px solid $border;
+      border-radius: 8px;
+      background: #fff;
+      padding: 0.35rem 0.62rem;
+    }
+  }
+
+  &__tabs {
+    padding: 0.72rem 0.9rem 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+
+    button {
+      border: 1px solid $border;
+      border-radius: 9px;
+      background: #fff;
+      padding: 0.48rem 0.62rem;
+      color: $text-main;
+      font-weight: 600;
+
+      &.is-active {
+        color: $accent-dark;
+        border-color: rgba(15, 143, 154, 0.45);
+        background: rgba(15, 143, 154, 0.12);
+      }
+    }
+  }
+
+  &__form {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.75rem 0.9rem 0.95rem;
+
+    label {
+      font-size: 0.84rem;
+      color: $text-muted;
+    }
+
+    input {
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 0.56rem 0.66rem;
+      background: #fff;
+    }
+
+    > button {
+      margin-top: 0.3rem;
+      border: 0;
+      border-radius: 10px;
+      padding: 0.62rem 0.75rem;
+      color: #fff;
+      font-weight: 600;
+      background: linear-gradient(145deg, $accent, $accent-dark);
+
+      &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__error {
+    margin: 0.2rem 0 0;
+    color: $danger;
+    font-size: 0.84rem;
+  }
+}
+
 .cart-drawer {
   position: fixed;
   right: 0;
@@ -1126,7 +1286,7 @@ button {
     grid-template-columns: auto 1fr auto;
     padding: 0.85rem 1.2rem;
 
-    &__cart {
+    &__actions {
       justify-self: end;
     }
   }

@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     db_user: str = "catalog_user"
     db_password: str = "catalog_password"
     database_url: str | None = None
+    jwt_secret_key: str = "change_me_for_production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 30
 
     @property
     def cors_origin_list(self) -> list[str]:

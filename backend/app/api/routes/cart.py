@@ -1,48 +1,28 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
+from app.api.deps import get_optional_current_user
 from app.db.session import get_db
-from app.models import Cart, CartItem, Product
+from app.models import Cart, CartItem, Product, User
 from app.schemas.cart import (
     CartAddItemRequest,
     CartItemResponse,
     CartResponse,
     CartUpdateItemRequest,
 )
+from app.services.cart_service import (
+    find_cart_by_session,
+    get_or_create_session_cart,
+    get_or_create_user_cart,
+    merge_session_cart_into_user_cart,
+)
 
 router = APIRouter(prefix="/cart")
-
-
-def _generate_session_id() -> str:
-    return uuid4().hex
-
-
-def _find_cart_by_session(db: Session, session_id: str) -> Cart | None:
-    stmt = select(Cart).where(Cart.session_id == session_id)
-    return db.execute(stmt).scalar_one_or_none()
-
-
-def _get_or_create_cart(db: Session, session_id: str | None) -> Cart:
-    normalized = (session_id or "").strip()
-    if normalized:
-        cart = _find_cart_by_session(db, normalized)
-        if cart:
-            return cart
-        cart = Cart(session_id=normalized)
-        db.add(cart)
-        db.flush()
-        return cart
-
-    cart = Cart(session_id=_generate_session_id())
-    db.add(cart)
-    db.flush()
-    return cart
 
 
 def _get_cart_for_session_or_404(db: Session, session_id: str | None) -> Cart:
@@ -52,7 +32,7 @@ def _get_cart_for_session_or_404(db: Session, session_id: str | None) -> Cart:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="X-Session-Id header is required",
         )
-    cart = _find_cart_by_session(db, normalized)
+    cart = find_cart_by_session(db, normalized)
     if cart is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -61,14 +41,35 @@ def _get_cart_for_session_or_404(db: Session, session_id: str | None) -> Cart:
     return cart
 
 
+def _resolve_cart_for_read_or_add(
+    db: Session,
+    session_id: str | None,
+    current_user: User | None,
+) -> Cart:
+    if current_user:
+        user_cart = get_or_create_user_cart(db, current_user)
+        return merge_session_cart_into_user_cart(db, session_id, current_user, user_cart)
+    return get_or_create_session_cart(db, session_id)
+
+
+def _resolve_cart_for_item_mutation(
+    db: Session,
+    session_id: str | None,
+    current_user: User | None,
+) -> Cart:
+    if current_user:
+        user_cart = get_or_create_user_cart(db, current_user)
+        return merge_session_cart_into_user_cart(db, session_id, current_user, user_cart)
+    return _get_cart_for_session_or_404(db, session_id)
+
+
 def _load_cart_with_items(db: Session, cart_id: int) -> Cart:
     stmt = (
         select(Cart)
         .where(Cart.id == cart_id)
         .options(joinedload(Cart.items).joinedload(CartItem.product))
     )
-    cart = db.execute(stmt).scalars().unique().one()
-    return cart
+    return db.execute(stmt).scalars().unique().one()
 
 
 def _serialize_cart(cart: Cart) -> CartResponse:
@@ -102,8 +103,9 @@ def add_item_to_cart(
     response: Response,
     db: Session = Depends(get_db),
     x_session_id: str | None = Header(default=None, alias="X-Session-Id"),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> CartResponse:
-    cart = _get_or_create_cart(db, x_session_id)
+    cart = _resolve_cart_for_read_or_add(db, x_session_id, current_user)
 
     product_stmt = select(Product).where(Product.id == payload.product_id)
     product = db.execute(product_stmt).scalar_one_or_none()
@@ -140,8 +142,9 @@ def get_cart(
     response: Response,
     db: Session = Depends(get_db),
     x_session_id: str | None = Header(default=None, alias="X-Session-Id"),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> CartResponse:
-    cart = _get_or_create_cart(db, x_session_id)
+    cart = _resolve_cart_for_read_or_add(db, x_session_id, current_user)
     db.commit()
     loaded_cart = _load_cart_with_items(db, cart.id)
     response.headers["X-Session-Id"] = loaded_cart.session_id
@@ -155,8 +158,9 @@ def update_cart_item(
     response: Response,
     db: Session = Depends(get_db),
     x_session_id: str | None = Header(default=None, alias="X-Session-Id"),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> CartResponse:
-    cart = _get_cart_for_session_or_404(db, x_session_id)
+    cart = _resolve_cart_for_item_mutation(db, x_session_id, current_user)
 
     item_stmt = select(CartItem).where(
         CartItem.id == item_id,
@@ -166,7 +170,7 @@ def update_cart_item(
     if item is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Cart item with id={item_id} not found for this session",
+            detail=f"Cart item with id={item_id} not found for this cart",
         )
 
     item.quantity = payload.quantity
@@ -183,8 +187,9 @@ def delete_cart_item(
     response: Response,
     db: Session = Depends(get_db),
     x_session_id: str | None = Header(default=None, alias="X-Session-Id"),
+    current_user: User | None = Depends(get_optional_current_user),
 ) -> CartResponse:
-    cart = _get_cart_for_session_or_404(db, x_session_id)
+    cart = _resolve_cart_for_item_mutation(db, x_session_id, current_user)
 
     item_stmt = select(CartItem).where(
         CartItem.id == item_id,
@@ -194,7 +199,7 @@ def delete_cart_item(
     if item is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Cart item with id={item_id} not found for this session",
+            detail=f"Cart item with id={item_id} not found for this cart",
         )
 
     db.delete(item)

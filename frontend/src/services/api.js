@@ -1,6 +1,13 @@
 import axios from 'axios';
 
-import { CART_SESSION_KEY, buildQueryParams } from '../utils/helpers';
+import {
+  AUTH_TOKEN_KEY,
+  CART_SESSION_KEY,
+  buildQueryParams,
+  getStoredValue,
+  removeStoredValue,
+  setStoredValue
+} from '../utils/helpers';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -13,13 +20,31 @@ const apiClient = axios.create({
 });
 
 function getSessionId() {
-  return localStorage.getItem(CART_SESSION_KEY);
+  return getStoredValue(CART_SESSION_KEY);
 }
 
 function setSessionId(sessionId) {
   if (sessionId) {
-    localStorage.setItem(CART_SESSION_KEY, sessionId);
+    setStoredValue(CART_SESSION_KEY, sessionId);
   }
+}
+
+function getAccessToken() {
+  return getStoredValue(AUTH_TOKEN_KEY);
+}
+
+export function setAccessToken(accessToken) {
+  if (accessToken) {
+    setStoredValue(AUTH_TOKEN_KEY, accessToken);
+  }
+}
+
+export function clearAccessToken() {
+  removeStoredValue(AUTH_TOKEN_KEY);
+}
+
+export function clearSessionId() {
+  removeStoredValue(CART_SESSION_KEY);
 }
 
 function normalizeApiError(error) {
@@ -42,6 +67,11 @@ function normalizeApiError(error) {
 }
 
 apiClient.interceptors.request.use((config) => {
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   const sessionId = getSessionId();
   if (sessionId) {
     config.headers['X-Session-Id'] = sessionId;
@@ -117,6 +147,23 @@ export async function fetchCategories(limit = 100) {
   return [...new Set(response.data.results.map((item) => item.category))].sort((a, b) =>
     a.localeCompare(b, 'ru')
   );
+}
+
+export async function registerUser(payload) {
+  const response = await apiClient.post('/auth/register', payload);
+  setAccessToken(response.data?.access_token);
+  return response.data;
+}
+
+export async function loginUser(payload) {
+  const response = await apiClient.post('/auth/login', payload);
+  setAccessToken(response.data?.access_token);
+  return response.data;
+}
+
+export async function fetchCurrentUser() {
+  const response = await apiClient.get('/auth/me');
+  return response.data;
 }
 
 export { API_URL };

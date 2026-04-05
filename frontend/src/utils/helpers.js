@@ -3,7 +3,13 @@ import { useEffect, useState } from 'react';
 export const CART_SESSION_KEY = 'catalog_session_id';
 export const CART_SNAPSHOT_KEY = 'catalog_cart_snapshot';
 export const COMPARE_IDS_KEY = 'catalog_compare_ids';
+export const AUTH_TOKEN_KEY = 'catalog_access_token';
+export const AUTH_USER_KEY = 'catalog_auth_user';
 export const PRODUCT_PLACEHOLDER_IMAGE = '/images/product-placeholder.svg';
+
+function canUseStorage() {
+  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+}
 
 const currencyFormatter = new Intl.NumberFormat('ru-KZ', {
   style: 'currency',
@@ -63,6 +69,10 @@ export function buildQueryParams(params) {
 }
 
 export function getStoredJSON(key, fallback) {
+  if (!canUseStorage()) {
+    return fallback;
+  }
+
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : fallback;
@@ -72,5 +82,34 @@ export function getStoredJSON(key, fallback) {
 }
 
 export function setStoredJSON(key, value) {
+  if (!canUseStorage()) {
+    return;
+  }
+
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+export function getStoredValue(key, fallback = null) {
+  if (!canUseStorage()) {
+    return fallback;
+  }
+
+  const value = localStorage.getItem(key);
+  return value === null ? fallback : value;
+}
+
+export function setStoredValue(key, value) {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  localStorage.setItem(key, value);
+}
+
+export function removeStoredValue(key) {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  localStorage.removeItem(key);
 }

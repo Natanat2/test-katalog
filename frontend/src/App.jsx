@@ -1,16 +1,25 @@
 import { DndContext, DragOverlay, PointerSensor, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
+import AuthModal from './components/AuthModal';
 import Cart from './components/Cart';
 import Notifications from './components/Notifications';
 import SeoRouteUpdater from './components/SeoRouteUpdater';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { CompareProvider, useCompare } from './context/CompareContext';
 import ComparePage from './pages/ComparePage';
 import HomePage from './pages/HomePage';
 import ProductPage from './pages/ProductPage';
-import { formatPrice, resolveProductImage } from './utils/helpers';
+import {
+  CART_SESSION_KEY,
+  CART_SNAPSHOT_KEY,
+  formatPrice,
+  removeStoredValue,
+  resolveProductImage
+} from './utils/helpers';
 
 const CART_DRAWER_DROPZONE_ID = 'cart-dropzone';
 const CART_BUTTON_DROPZONE_ID = 'cart-button-dropzone';
@@ -139,11 +148,15 @@ function CartDropFlyEffect({ effect, onFinish }) {
 
 function AppShell() {
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
+  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
   const [activeDragProduct, setActiveDragProduct] = useState(null);
   const [activeDragStartRect, setActiveDragStartRect] = useState(null);
   const [dropFlyEffect, setDropFlyEffect] = useState(null);
-  const { addToCart, itemCount } = useCart();
+  const { addToCart, itemCount, refreshCart } = useCart();
   const { compareCount } = useCompare();
+  const { user, isLoading: isAuthLoading, isAuthenticated, login, register, logout } = useAuth();
   const clearDropFlyEffect = useCallback(() => setDropFlyEffect(null), []);
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -152,6 +165,40 @@ function AppShell() {
       }
     })
   );
+
+  const openAuthModal = useCallback((mode) => {
+    setAuthMode(mode);
+    setIsAuthModalOpen(true);
+  }, []);
+
+  const handleAuthSubmit = useCallback(
+    async (credentials, mode) => {
+      setIsAuthSubmitting(true);
+      try {
+        if (mode === 'register') {
+          await register(credentials);
+          toast.success('Аккаунт создан.');
+        } else {
+          await login(credentials);
+          toast.success('Вы вошли в аккаунт.');
+        }
+
+        await refreshCart();
+        setIsAuthModalOpen(false);
+      } finally {
+        setIsAuthSubmitting(false);
+      }
+    },
+    [login, refreshCart, register]
+  );
+
+  const handleLogout = useCallback(async () => {
+    logout();
+    removeStoredValue(CART_SESSION_KEY);
+    removeStoredValue(CART_SNAPSHOT_KEY);
+    await refreshCart();
+    toast.info('Вы вышли из аккаунта.');
+  }, [logout, refreshCart]);
 
   return (
     <DndContext
@@ -213,7 +260,40 @@ function AppShell() {
             <NavLink to="/compare">Сравнение ({compareCount})</NavLink>
           </nav>
 
-          <CartDropButton itemCount={itemCount} onOpen={() => setIsCartOpen(true)} />
+          <div className="app-header__actions">
+            <div className="app-header__auth">
+              {isAuthLoading ? (
+                <span className="app-header__auth-note">Проверяем вход...</span>
+              ) : isAuthenticated ? (
+                <>
+                  <span className="app-header__auth-email" title={user?.email || ''}>
+                    {user?.email}
+                  </span>
+                  <button type="button" className="app-header__auth-btn" onClick={handleLogout}>
+                    Выйти
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="app-header__auth-btn"
+                    onClick={() => openAuthModal('login')}
+                  >
+                    Войти
+                  </button>
+                  <button
+                    type="button"
+                    className="app-header__auth-btn app-header__auth-btn--primary"
+                    onClick={() => openAuthModal('register')}
+                  >
+                    Регистрация
+                  </button>
+                </>
+              )}
+            </div>
+            <CartDropButton itemCount={itemCount} onOpen={() => setIsCartOpen(true)} />
+          </div>
         </header>
 
         <main className="app-main">
@@ -225,6 +305,14 @@ function AppShell() {
         </main>
 
         <Cart open={isCartOpen} onClose={() => setIsCartOpen(false)} />
+        <AuthModal
+          open={isAuthModalOpen}
+          mode={authMode}
+          isSubmitting={isAuthSubmitting}
+          onModeChange={setAuthMode}
+          onClose={() => setIsAuthModalOpen(false)}
+          onSubmit={handleAuthSubmit}
+        />
         <Notifications />
       </div>
       <CartDropFlyEffect
@@ -242,9 +330,11 @@ function AppShell() {
 export default function App() {
   return (
     <CompareProvider>
-      <CartProvider>
-        <AppShell />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <AppShell />
+        </CartProvider>
+      </AuthProvider>
     </CompareProvider>
   );
 }

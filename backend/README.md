@@ -73,6 +73,40 @@ Swagger UI: `http://localhost:8000/docs`
 
 ## API notes
 
-- Cart endpoints use `X-Session-Id` header.
+- Cart endpoints support two modes:
+  - guest mode: by `X-Session-Id` header
+  - authorized mode: by `Authorization: Bearer <access_token>`
 - `GET /api/cart/` and `POST /api/cart/` create a cart if session header is missing and return `X-Session-Id` in response headers.
-- `PUT /api/cart/{item_id}/` and `DELETE /api/cart/{item_id}/` require `X-Session-Id`.
+- `PUT /api/cart/{item_id}/` and `DELETE /api/cart/{item_id}/` require `X-Session-Id` only for guest mode.
+
+## Auth (optional JWT)
+
+- `POST /api/auth/register` - register user and return access token.
+- `POST /api/auth/login` - login user and return access token.
+- `GET /api/auth/me` - get current user by bearer token.
+
+Payload examples:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+Response shape:
+
+```json
+{
+  "access_token": "<jwt>",
+  "token_type": "bearer",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "is_active": true,
+    "created_at": "2026-04-05T12:00:00Z"
+  }
+}
+```
+
+If `X-Session-Id` is passed to register/login, guest cart is merged into user cart.

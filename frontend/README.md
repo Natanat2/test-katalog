@@ -54,3 +54,9 @@ npm run preview:spa
 - `/` - catalog
 - `/products/:id` - product details
 - `/compare` - compare mode
+
+## Auth integration
+
+- Header supports `Вход / Регистрация / Выход`.
+- Frontend stores JWT in `localStorage` and sends `Authorization: Bearer <token>` automatically.
+- Current `X-Session-Id` is also sent during login/register, so guest cart merges into user cart on backend.
