@@ -5,8 +5,8 @@ Interactive product catalog project.
 ## Project structure
 
 - `backend/` - FastAPI API service
-- `frontend/` - frontend app (specified separately)
-- `docker-compose.yml` - local infrastructure (PostgreSQL + backend)
+- `frontend/` - React + Vite client
+- `docker-compose.yml` - local infrastructure (PostgreSQL + backend + frontend)
 
 ## Run in Docker (recommended)
 
@@ -15,12 +15,19 @@ docker compose up -d --build
 ```
 
 Backend API: `http://localhost:8000`  
-Swagger UI: `http://localhost:8000/docs`
+Swagger UI: `http://localhost:8000/docs`  
+Frontend: `http://localhost:5173`
 
 Seed products:
 
 ```bash
 docker compose exec backend python -m app.scripts.seed_products --reset --count 20
+```
+
+Stop services:
+
+```bash
+docker compose down
 ```
 
 ## Backend local run (without Docker backend)
@@ -36,3 +43,14 @@ pip install -r requirements.txt
 .venv/bin/python -m app.scripts.seed_products --reset --count 20
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+## Frontend run
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Frontend: `http://localhost:5173`
