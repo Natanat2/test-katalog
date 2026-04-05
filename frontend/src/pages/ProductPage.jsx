@@ -5,7 +5,9 @@ import { toast } from 'react-toastify';
 import ProductDetail from '../components/ProductDetail';
 import { useCart } from '../context/CartContext';
 import { useCompare } from '../context/CompareContext';
+import { useSsrData } from '../context/SsrDataContext';
 import { fetchProduct } from '../services/api';
+import { applySeoToDocument } from '../utils/seo';
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -13,12 +15,22 @@ export default function ProductPage() {
 
   const { addToCart } = useCart();
   const { toggleCompare, isCompared } = useCompare();
+  const { getProductById } = useSsrData();
 
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const ssrProduct = getProductById(productId);
+
+  const [product, setProduct] = useState(ssrProduct);
+  const [loading, setLoading] = useState(!ssrProduct);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (ssrProduct) {
+      setProduct(ssrProduct);
+      setLoading(false);
+      setError('');
+      return undefined;
+    }
+
     let active = true;
 
     setLoading(true);
@@ -45,7 +57,17 @@ export default function ProductPage() {
     return () => {
       active = false;
     };
-  }, [productId]);
+  }, [productId, ssrProduct]);
+
+  useEffect(() => {
+    if (!product || !product.id) {
+      return;
+    }
+
+    applySeoToDocument(`/products/${product.id}`, undefined, {
+      currentProduct: product
+    });
+  }, [product]);
 
   return (
     <section className="product-page">

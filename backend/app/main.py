@@ -20,6 +20,7 @@ def create_application() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["X-Session-Id"],
     )
 
     register_error_handlers(app)

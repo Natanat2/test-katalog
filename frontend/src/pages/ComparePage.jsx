@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 
 import { useCompare } from '../context/CompareContext';
 import { fetchProduct } from '../services/api';
-import { formatPrice } from '../utils/helpers';
+import { applyProductImageFallback, formatPrice, resolveProductImage } from '../utils/helpers';
 
 export default function ComparePage() {
   const { selectedIds, clearCompare, toggleCompare } = useCompare();
@@ -93,8 +93,9 @@ export default function ComparePage() {
                 {products.map((product) => (
                   <td key={`img-${product.id}`}>
                     <img
-                      src={product.image || 'https://placehold.co/240x160/f8f3ea/473f2f?text=No+Image'}
+                      src={resolveProductImage(product.image)}
                       alt={product.name}
+                      onError={applyProductImageFallback}
                     />
                   </td>
                 ))}

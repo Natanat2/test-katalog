@@ -1,4 +1,4 @@
-import { formatPrice } from '../utils/helpers';
+import { applyProductImageFallback, formatPrice, resolveProductImage } from '../utils/helpers';
 
 export default function ProductDetail({
   product,
@@ -24,8 +24,9 @@ export default function ProductDetail({
     <section className="product-detail">
       <div className="product-detail__media">
         <img
-          src={product.image || 'https://placehold.co/900x650/f8f3ea/473f2f?text=No+Image'}
+          src={resolveProductImage(product.image)}
           alt={product.name}
+          onError={applyProductImageFallback}
         />
       </div>
 

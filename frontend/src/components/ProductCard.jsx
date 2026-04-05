@@ -1,6 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
 
-import { formatPrice } from '../utils/helpers';
+import { applyProductImageFallback, formatPrice, resolveProductImage } from '../utils/helpers';
 
 export default function ProductCard({
   product,
@@ -9,7 +9,9 @@ export default function ProductCard({
   onToggleCompare,
   isCompared
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const compareLabel = isCompared ? 'Убрать из сравнения' : 'Сравнить';
+
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `product-${product.id}`,
     data: {
       type: 'product',
@@ -17,33 +19,20 @@ export default function ProductCard({
     }
   });
 
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`
-      }
-    : undefined;
-
   return (
     <article
       ref={setNodeRef}
-      style={style}
       className={`product-card ${isDragging ? 'product-card--dragging' : ''}`}
+      {...listeners}
+      {...attributes}
+      aria-label={`Товар ${product.name}`}
     >
-      <button
-        type="button"
-        className="product-card__drag-handle"
-        title="Перетащить в корзину"
-        {...listeners}
-        {...attributes}
-      >
-        Перетащить
-      </button>
-
       <button type="button" className="product-card__image-wrap" onClick={() => onOpenDetails(product.id)}>
         <img
-          src={product.image || 'https://placehold.co/600x400/f8f3ea/473f2f?text=No+Image'}
+          src={resolveProductImage(product.image)}
           alt={product.name}
           loading="lazy"
+          onError={applyProductImageFallback}
         />
       </button>
 
@@ -54,16 +43,30 @@ export default function ProductCard({
       </div>
 
       <div className="product-card__actions">
-        <button type="button" onClick={() => onAddToCart(product)}>
+        <button
+          type="button"
+          className="product-card__action product-card__action--cart"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => onAddToCart(product)}
+        >
           В корзину
         </button>
 
         <button
           type="button"
-          className={isCompared ? 'is-compared' : ''}
+          className={`product-card__action product-card__action--compare ${isCompared ? 'is-compared' : ''}`}
+          onPointerDown={(event) => event.stopPropagation()}
           onClick={() => onToggleCompare(product.id)}
+          aria-label={compareLabel}
+          data-tooltip={compareLabel}
         >
-          {isCompared ? 'Убрать из сравнения' : 'Сравнить'}
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 4v16h16" />
+            <path d="M8 17v-5" />
+            <path d="M12 17V8" />
+            <path d="M16 17v-7" />
+            <path d="M20 17V6" />
+          </svg>
         </button>
       </div>
     </article>

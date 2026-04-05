@@ -53,7 +53,14 @@ export default function ProductList({
 
   const columnCount = useMemo(() => getColumnCount(width), [width]);
   const rowCount = useMemo(() => Math.ceil(products.length / columnCount), [products.length, columnCount]);
-  const rowHeight = columnCount === 1 ? 430 : 410;
+  const rowHeight = useMemo(() => {
+    const gap = 12;
+    const horizontalPadding = 6.4;
+    const safeWidth = Math.max(width - horizontalPadding - gap * (columnCount - 1), 0);
+    const cardWidth = safeWidth / columnCount;
+    const imageHeight = (cardWidth * 10) / 16;
+    return Math.max(300, Math.ceil(imageHeight + 150));
+  }, [columnCount, width]);
 
   const Row = ({ index, style }) => {
     const start = index * columnCount;

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 
 import { useCart } from '../context/CartContext';
-import { formatPrice } from '../utils/helpers';
+import { applyProductImageFallback, formatPrice, resolveProductImage } from '../utils/helpers';
 
 export default function Cart({ open, onClose }) {
   const {
@@ -71,8 +71,9 @@ export default function Cart({ open, onClose }) {
           {items.map((item) => (
             <article key={item.id} className="cart-item">
               <img
-                src={item.product.image || 'https://placehold.co/200x200/f8f3ea/473f2f?text=No+Image'}
+                src={resolveProductImage(item.product.image)}
                 alt={item.product.name}
+                onError={applyProductImageFallback}
               />
 
               <div className="cart-item__content">

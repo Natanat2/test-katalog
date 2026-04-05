@@ -51,7 +51,10 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => {
-    const sessionId = response.headers['x-session-id'];
+    const headerSessionId = response.headers['x-session-id'];
+    const bodySessionId =
+      response.data && typeof response.data === 'object' ? response.data.session_id : null;
+    const sessionId = headerSessionId || bodySessionId;
     setSessionId(sessionId);
     return response;
   },
@@ -102,7 +105,7 @@ export async function fetchAutocomplete(query) {
   return response.data.results;
 }
 
-export async function fetchCategories(limit = 200) {
+export async function fetchCategories(limit = 100) {
   const response = await apiClient.get('/products/', {
     params: {
       limit,

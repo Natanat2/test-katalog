@@ -255,12 +255,6 @@ export default function HomePage() {
 
   return (
     <section className="home-page">
-      <div className="home-page__hero">
-        <p>Онлайн-каталог</p>
-        <h1>Интерактивный каталог товаров</h1>
-        <span>{productsResponse.count} товаров в выдаче</span>
-      </div>
-
       <SearchBar
         value={searchInput}
         onChange={setSearchInput}

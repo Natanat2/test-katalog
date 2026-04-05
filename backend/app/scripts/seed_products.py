@@ -10,86 +10,85 @@ from app.models import Cart, CartItem, Product
 
 BASE_PRODUCTS = [
     {
-        "name": "Smartphone Alpha",
-        "description": "6.5-inch OLED display, 128GB storage.",
-        "price": Decimal("599.00"),
-        "image": "https://example.com/images/smartphone-alpha.jpg",
-        "category": "Electronics",
+        "name": "Смартфон Samsung Galaxy A55 8/256 ГБ",
+        "description": "Популярный смартфон среднего класса с AMOLED-экраном и NFC.",
+        "price": Decimal("189990.00"),
+        "image": "/images/products/smartphone-samsung-galaxy-a55.jpg",
+        "category": "Электроника",
     },
     {
-        "name": "Notebook Breeze",
-        "description": "Lightweight notebook for office and study.",
-        "price": Decimal("2.90"),
-        "image": "https://example.com/images/notebook-breeze.jpg",
-        "category": "Stationery",
+        "name": "Ноутбук Lenovo IdeaPad Slim 3 15",
+        "description": "Ноутбук 15.6 дюйма для учебы, офиса и удаленной работы.",
+        "price": Decimal("329990.00"),
+        "image": "/images/products/notebook-lenovo-ideapad-slim-3-15.jpg",
+        "category": "Электроника",
     },
     {
-        "name": "Laptop Vertex 14",
-        "description": "14-inch laptop for daily workloads.",
-        "price": Decimal("899.00"),
-        "image": "https://example.com/images/laptop-vertex-14.jpg",
-        "category": "Electronics",
+        "name": "Электрочайник Xiaomi Smart Kettle Pro",
+        "description": "Умный электрочайник с поддержанием выбранной температуры.",
+        "price": Decimal("22990.00"),
+        "image": "/images/products/electric-kettle-xiaomi-smart-kettle-pro.jpg",
+        "category": "Товары для дома",
     },
     {
-        "name": "Coffee Beans Roastery",
-        "description": "Medium roast arabica beans, 1kg.",
-        "price": Decimal("19.50"),
-        "image": "https://example.com/images/coffee-beans-roastery.jpg",
-        "category": "Grocery",
+        "name": "Кофе в зернах Barista 1 кг",
+        "description": "Смесь арабики для эспрессо-машины, турки и фильтра.",
+        "price": Decimal("13990.00"),
+        "image": "/images/products/coffee-barista-beans-1kg.jpg",
+        "category": "Продукты",
     },
     {
-        "name": "Desk Lamp Nova",
-        "description": "Adjustable LED lamp with warm/cold light.",
-        "price": Decimal("34.99"),
-        "image": "https://example.com/images/desk-lamp-nova.jpg",
-        "category": "Home",
+        "name": "Пылесос Dyson V8 беспроводной",
+        "description": "Беспроводной пылесос с автономной работой до 40 минут.",
+        "price": Decimal("229990.00"),
+        "image": "/images/products/vacuum-dyson-v8.jpg",
+        "category": "Товары для дома",
     },
     {
-        "name": "Sneakers Sprint One",
-        "description": "Breathable running shoes.",
-        "price": Decimal("79.00"),
-        "image": "https://example.com/images/sneakers-sprint-one.jpg",
-        "category": "Fashion",
+        "name": "Кроссовки Nike Revolution 7",
+        "description": "Легкие кроссовки для тренировок и повседневной носки.",
+        "price": Decimal("37990.00"),
+        "image": "/images/products/sneakers-nike-revolution-7.jpg",
+        "category": "Одежда и обувь",
     },
     {
-        "name": "Backpack Metro 20L",
-        "description": "Water-resistant city backpack.",
-        "price": Decimal("49.90"),
-        "image": "https://example.com/images/backpack-metro-20l.jpg",
-        "category": "Fashion",
+        "name": "Куртка Uniqlo Ultra Light Down",
+        "description": "Легкая теплая куртка для ветреной и холодной погоды в Астане.",
+        "price": Decimal("59990.00"),
+        "image": "/images/products/jacket-uniqlo-ultra-light-down.jpg",
+        "category": "Одежда и обувь",
     },
     {
-        "name": "Bluetooth Speaker Mini",
-        "description": "Portable speaker with 10h battery life.",
-        "price": Decimal("45.00"),
-        "image": "https://example.com/images/bluetooth-speaker-mini.jpg",
-        "category": "Electronics",
+        "name": "Тетрадь А4 96 листов в линию",
+        "description": "Классическая тетрадь для школы, колледжа и университета.",
+        "price": Decimal("1290.00"),
+        "image": "/images/products/notebook-a4-96-pages.jpg",
+        "category": "Канцелярия",
     },
     {
-        "name": "Cookware Pan 28cm",
-        "description": "Non-stick frying pan for everyday cooking.",
-        "price": Decimal("27.40"),
-        "image": "https://example.com/images/cookware-pan-28.jpg",
-        "category": "Home",
+        "name": "Электрическая зубная щетка Oral-B Pro 3",
+        "description": "Щетка с датчиком давления и встроенным таймером чистки.",
+        "price": Decimal("28990.00"),
+        "image": "/images/products/toothbrush-oral-b-pro-3.jpg",
+        "category": "Красота и здоровье",
     },
     {
-        "name": "Novel The North Line",
-        "description": "Contemporary fiction bestseller.",
-        "price": Decimal("14.20"),
-        "image": "https://example.com/images/novel-the-north-line.jpg",
-        "category": "Books",
+        "name": "Книга «Атомные привычки»",
+        "description": "Бестселлер о формировании полезных привычек и дисциплины.",
+        "price": Decimal("7990.00"),
+        "image": "/images/products/book-atomic-habits.jpg",
+        "category": "Книги",
     },
 ]
 
 
 def build_products(count: int) -> list[Product]:
+    unique_count = min(count, len(BASE_PRODUCTS))
     result: list[Product] = []
-    for i in range(count):
-        template = BASE_PRODUCTS[i % len(BASE_PRODUCTS)]
-        suffix = f" #{i + 1}" if i >= len(BASE_PRODUCTS) else ""
+    for template in BASE_PRODUCTS[:unique_count]:
         result.append(
             Product(
-                name=f"{template['name']}{suffix}",
+                name=template["name"],
                 description=template["description"],
                 price=template["price"],
                 image=template["image"],
@@ -101,7 +100,12 @@ def build_products(count: int) -> list[Product]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Seed products for local development.")
-    parser.add_argument("--count", type=int, default=20, help="Number of products to insert.")
+    parser.add_argument(
+        "--count",
+        type=int,
+        default=len(BASE_PRODUCTS),
+        help=f"Number of unique products to insert (max {len(BASE_PRODUCTS)}).",
+    )
     parser.add_argument(
         "--reset",
         action="store_true",
@@ -114,6 +118,11 @@ def main() -> None:
     args = parse_args()
     if args.count < 1:
         raise ValueError("--count must be greater than 0")
+    if args.count > len(BASE_PRODUCTS):
+        print(
+            f"Only {len(BASE_PRODUCTS)} unique templates are available. "
+            f"Will seed {len(BASE_PRODUCTS)} products."
+        )
 
     session = SessionLocal()
     try:

@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react';
 export const CART_SESSION_KEY = 'catalog_session_id';
 export const CART_SNAPSHOT_KEY = 'catalog_cart_snapshot';
 export const COMPARE_IDS_KEY = 'catalog_compare_ids';
+export const PRODUCT_PLACEHOLDER_IMAGE = '/images/product-placeholder.svg';
 
-const currencyFormatter = new Intl.NumberFormat('ru-RU', {
+const currencyFormatter = new Intl.NumberFormat('ru-KZ', {
   style: 'currency',
-  currency: 'RUB',
+  currency: 'KZT',
   maximumFractionDigits: 2
 });
 
@@ -16,6 +17,20 @@ export function formatPrice(value) {
     return currencyFormatter.format(0);
   }
   return currencyFormatter.format(number);
+}
+
+export function resolveProductImage(image) {
+  if (typeof image !== 'string') {
+    return PRODUCT_PLACEHOLDER_IMAGE;
+  }
+
+  const normalized = image.trim();
+  return normalized.length > 0 ? normalized : PRODUCT_PLACEHOLDER_IMAGE;
+}
+
+export function applyProductImageFallback(event) {
+  event.currentTarget.onerror = null;
+  event.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
 }
 
 export function toNumber(value) {

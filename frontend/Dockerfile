@@ -12,13 +12,20 @@ ENV VITE_API_URL=${VITE_API_URL}
 
 RUN npm run build
 
-FROM nginx:1.27-alpine
+FROM node:24-alpine AS runtime
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=5173
 
-EXPOSE 80
+COPY package*.json /app/
+RUN npm ci --omit=dev
 
-HEALTHCHECK --interval=10s --timeout=5s --retries=5 CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1
+COPY --from=build /app/dist /app/dist
+COPY --from=build /app/server.js /app/server.js
 
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 5173
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 CMD wget -q -O /dev/null http://127.0.0.1:5173/ || exit 1
+
+CMD ["node", "server.js"]

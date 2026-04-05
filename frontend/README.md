@@ -19,7 +19,10 @@ npm install
 npm run dev
 ```
 
-Frontend: `http://localhost:5173`
+SSR frontend: `http://localhost:5173`
+
+`PUBLIC_BASE_URL` используется для canonical/og URL в SSR метатегах.  
+`SSR_API_URL` используется серверным рендером для загрузки данных товара на `/products/:id`.
 
 ## Run in Docker
 
@@ -36,6 +39,14 @@ Frontend: `http://localhost:5173`
 ```bash
 npm run build
 npm run preview
+```
+
+## SPA mode (optional)
+
+```bash
+npm run dev:spa
+npm run build:spa
+npm run preview:spa
 ```
 
 ## Main routes
