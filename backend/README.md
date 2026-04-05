@@ -13,7 +13,7 @@ docker compose up -d --build
 2. Seed products:
 
 ```bash
-docker compose exec backend python -m app.scripts.seed_products --reset --count 20
+docker compose exec backend python -m app.scripts.seed_products --reset --count 10
 ```
 
 Swagger UI: `http://localhost:8000/docs`
@@ -62,7 +62,7 @@ Swagger UI: `http://localhost:8000/docs`
 ## Seed data
 
 ```bash
-.venv/bin/python -m app.scripts.seed_products --reset --count 20
+.venv/bin/python -m app.scripts.seed_products --reset --count 10
 ```
 
 ## Run tests

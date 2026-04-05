@@ -50,3 +50,10 @@ def test_cart_add_validation_error(client, sample_products):
     assert response.status_code == 422
     payload = response.json()
     assert payload["code"] == "validation_error"
+
+
+def test_cart_with_invalid_bearer_token_returns_401(client):
+    response = client.get("/api/cart/", headers={"Authorization": "Bearer invalid.token.value"})
+    assert response.status_code == 401
+    payload = response.json()
+    assert payload["code"] == "auth_invalid_token"

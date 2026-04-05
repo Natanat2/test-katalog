@@ -1,3 +1,8 @@
+from sqlalchemy import select
+
+from app.models import User
+
+
 def _register_user(client, email="user@example.com", password="password123"):
     response = client.post(
         "/api/auth/register",
@@ -116,3 +121,17 @@ def test_auth_login_merges_guest_cart_into_user_cart(client, sample_products):
     quantities = {item["product"]["id"]: item["quantity"] for item in merged_payload["items"]}
     assert quantities[first_product_id] == 3
     assert quantities[second_product_id] == 3
+
+
+def test_auth_inactive_user_token_rejected_in_cart(client, db_session):
+    register_response = _register_user(client, email="inactive@example.com", password="password123")
+    token = register_response.json()["access_token"]
+
+    user = db_session.execute(select(User).where(User.email == "inactive@example.com")).scalar_one()
+    user.is_active = False
+    db_session.commit()
+
+    response = client.get("/api/cart/", headers=_auth_headers(token))
+    assert response.status_code == 401
+    payload = response.json()
+    assert payload["code"] == "auth_invalid_token"

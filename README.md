@@ -21,7 +21,7 @@ Frontend: `http://localhost:5173`
 Seed products:
 
 ```bash
-docker compose exec backend python -m app.scripts.seed_products --reset --count 20
+docker compose exec backend python -m app.scripts.seed_products --reset --count 10
 ```
 
 Stop services:
@@ -40,7 +40,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 .venv/bin/alembic upgrade head
-.venv/bin/python -m app.scripts.seed_products --reset --count 20
+.venv/bin/python -m app.scripts.seed_products --reset --count 10
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 

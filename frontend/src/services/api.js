@@ -136,17 +136,34 @@ export async function fetchAutocomplete(query) {
 }
 
 export async function fetchCategories(limit = 100) {
-  const response = await apiClient.get('/products/', {
-    params: {
-      limit,
-      offset: 0,
-      ordering: 'name'
-    }
-  });
+  const categories = new Set();
+  let offset = 0;
+  const maxPages = 50;
 
-  return [...new Set(response.data.results.map((item) => item.category))].sort((a, b) =>
-    a.localeCompare(b, 'ru')
-  );
+  for (let page = 0; page < maxPages; page += 1) {
+    const response = await apiClient.get('/products/', {
+      params: {
+        limit,
+        offset,
+        ordering: 'name'
+      }
+    });
+
+    const results = Array.isArray(response.data?.results) ? response.data.results : [];
+    results.forEach((item) => {
+      if (item?.category) {
+        categories.add(item.category);
+      }
+    });
+
+    if (results.length < limit || !response.data?.next) {
+      break;
+    }
+
+    offset += limit;
+  }
+
+  return [...categories].sort((a, b) => a.localeCompare(b, 'ru'));
 }
 
 export async function registerUser(payload) {

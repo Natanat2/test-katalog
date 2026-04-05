@@ -32,6 +32,9 @@ services:
       APP_PORT: 8000
       CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       DATABASE_URL: postgresql+psycopg://catalog_user:catalog_password@postgres:5432/catalog_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local_dev_jwt_secret_change_me}
+      JWT_ALGORITHM: HS256
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 30
     command:
       [
         "/bin/sh",

@@ -207,15 +207,33 @@ export function CartProvider({ children }) {
     setCart(optimistic);
     setIsMutating(true);
 
+    let mutationError = null;
     try {
-      await Promise.all(previous.items.map((item) => deleteCartItem(item.id)));
-      const remoteCart = await fetchCart();
-      setCart(remoteCart);
-      toast.success('Корзина очищена.');
-    } catch (error) {
-      setCart(previous);
-      toast.error(error.message || 'Не удалось очистить корзину.');
+      for (const item of previous.items) {
+        try {
+          await deleteCartItem(item.id);
+        } catch (error) {
+          mutationError = error;
+          break;
+        }
+      }
     } finally {
+      try {
+        const remoteCart = await fetchCart();
+        setCart(remoteCart);
+      } catch (refreshError) {
+        setCart(previous);
+        toast.error(refreshError.message || 'Не удалось обновить корзину после очистки.');
+        setIsMutating(false);
+        return;
+      }
+
+      if (mutationError) {
+        toast.error(mutationError.message || 'Не удалось полностью очистить корзину.');
+      } else {
+        toast.success('Корзина очищена.');
+      }
+
       setIsMutating(false);
     }
   }, [cart]);

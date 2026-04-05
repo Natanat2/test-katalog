@@ -38,10 +38,15 @@ export function AuthProvider({ children }) {
       const currentUser = await fetchCurrentUser();
       setUser(currentUser);
       persistUser(currentUser);
-    } catch {
-      clearAccessToken();
-      setUser(null);
-      persistUser(null);
+    } catch (error) {
+      const status = typeof error?.status === 'number' ? error.status : 0;
+      const shouldLogout = status === 401 || status === 403;
+
+      if (shouldLogout) {
+        clearAccessToken();
+        setUser(null);
+        persistUser(null);
+      }
     } finally {
       setIsLoading(false);
     }
